@@ -1,17 +1,19 @@
 /**
- * Supabase client — server-side for data fetching
+ * Supabase client — server-side for SSR data fetching
+ * Uses @supabase/supabase-js directly (not @supabase/ssr) for server components
  */
-import { createBrowserClient } from "@supabase/ssr";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-// For browser/client
-export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
+// For server components (SSR) — anon key, respects RLS
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});
 
 // For server-side with service role (bypasses RLS — used in API routes/cron)
-export const supabaseAdmin = createSupabaseClient(
+export const supabaseAdmin = createClient(
   process.env.SUPABASE_URL || supabaseUrl,
   process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey,
   {
