@@ -7,6 +7,7 @@ import type { Article, Source } from "@/lib/supabase";
 
 // Revalidate every 10 minutes
 export const revalidate = 600;
+export const dynamic = 'force-dynamic';
 
 interface HomeProps {
   searchParams: Promise<{ rajoni?: string }>;

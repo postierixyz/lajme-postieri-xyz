@@ -3,6 +3,7 @@ import { ArticleCard } from "@/components/article-card";
 import { Separator } from "@/components/ui/separator";
 
 export const revalidate = 300;
+export const dynamic = 'force-dynamic';
 
 export default async function SearchPage({
   searchParams,
