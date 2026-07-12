@@ -36,6 +36,8 @@ create table if not exists public.articles (
   image_url text,
   category text not null default 'të tjera', -- politikë, ekonomi, sport, kulturë, teknologji, bota, të tjera
   author text,
+  year integer not null default extract(year from now()),
+  full_content text, -- scraped full article text from original source
   published_at timestamptz,
   guid text not null,
   created_at timestamptz not null default now(),

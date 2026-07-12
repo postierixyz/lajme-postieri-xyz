@@ -18,6 +18,9 @@ export function Footer() {
             <Link href="/burimet" className="hover:text-foreground">
               Burimet
             </Link>
+            <Link href="/arkivi/2026" className="hover:text-foreground">
+              Arkivi
+            </Link>
             <Link href="https://postieri.xyz" className="hover:text-foreground">
               Postieri XYZ
             </Link>

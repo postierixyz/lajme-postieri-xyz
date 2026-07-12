@@ -172,6 +172,113 @@ async function fetchFeed(rssUrl: string): Promise<string> {
   return res.text();
 }
 
+/**
+ * Scrape the full article text from the original source URL.
+ * Uses og:description and meta description as fallback, then tries to
+ * extract structured text content from the page.
+ */
+async function scrapeFullContent(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        Accept: "text/html,application/xhtml+xml,*/*",
+      },
+      signal: AbortSignal.timeout(12000),
+      next: { revalidate: 0 },
+    });
+    if (!res.ok) return null;
+    
+    const html = await res.text();
+    
+    // Extract og:description (most reliable for Albanian news sites)
+    const ogDesc = html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i)
+      || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:description["']/i);
+    if (ogDesc && ogDesc[1] && ogDesc[1].length > 80) {
+      return ogDesc[1].replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#x27;/g, "'").replace(/&quot;/g, '"');
+    }
+    
+    // Extract article body by looking for common content patterns
+    // Albanian news sites often use: <div class="content">, <article>, <div class="article-content">
+    const articleMatch = html.match(/<article[^>]*>([\s\S]*?)<\/article>/i)
+      || html.match(/<div[^>]+class=["'][^"']*(?:article-content|post-content|content-body|main-content|single-content)[^"']*["'][^>]*>([\s\S]*?)<\/div>/i)
+      || html.match(/<div[^>]+class=["'][^"']*(?:content|entry-content|single-post)[^"']*["'][^>]*>([\s\S]*?)<\/div>/i);
+    
+    if (articleMatch) {
+      let content = articleMatch[1]
+        .replace(/<script[\s\S]*?<\/script>/gi, "")
+        .replace(/<style[\s\S]*?<\/style>/gi, "")
+        .replace(/<iframe[\s\S]*?<\/iframe>/gi, "")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/&[a-z]+;/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      
+      if (content.length > 200) {
+        return content.slice(0, 8000); // max 8000 chars
+      }
+    }
+
+    // Fallback: extract visible text from the page body
+    const bodyText = html
+      .replace(/<script[\s\S]*?<\/script>/gi, "")
+      .replace(/<style[\s\S]*?<\/style>/gi, "")
+      .replace(/<nav[\s\S]*?<\/nav>/gi, "")
+      .replace(/<footer[\s\S]*?<\/footer>/gi, "")
+      .replace(/<header[\s\S]*?<\/header>/gi, "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&[a-z]+;/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    
+    if (bodyText.length > 500) {
+      // Take middle portion (skip navigation/header junk, get content area)
+      const start = Math.floor(bodyText.length * 0.15); // skip first 15%
+      const chunk = bodyText.slice(start, start + 8000);
+      if (chunk.length > 200) return chunk;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Scrape full content for articles that don't have it yet.
+ * This runs after initial RSS ingestion to enrich articles.
+ */
+export async function enrichArticles(): Promise<number> {
+  // Get articles from last 24 hours that don't have full_content yet
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  
+  const { data: articles } = await supabaseAdmin
+    .from("articles")
+    .select("id, url")
+    .is("full_content", null)
+    .gte("created_at", oneDayAgo)
+    .limit(20);
+
+  if (!articles?.length) return 0;
+
+  let enriched = 0;
+  for (const art of articles) {
+    const content = await scrapeFullContent(art.url);
+    if (content) {
+      await supabaseAdmin
+        .from("articles")
+        .update({ full_content: content })
+        .eq("id", art.id);
+      enriched++;
+    }
+    // Small delay to avoid rate limiting
+    await new Promise((r) => setTimeout(r, 500));
+  }
+
+  return enriched;
+}
+
 export async function ingestAllFeeds(): Promise<{
   sourcesProcessed: number;
   articlesInserted: number;

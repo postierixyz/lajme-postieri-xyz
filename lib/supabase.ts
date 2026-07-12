@@ -53,6 +53,8 @@ export interface Article {
   image_url: string | null;
   category: string;
   author: string | null;
+  year: number;
+  full_content: string | null;
   published_at: string | null;
   created_at: string;
   source_name?: string;

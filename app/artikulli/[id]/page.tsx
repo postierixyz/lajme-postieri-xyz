@@ -41,6 +41,16 @@ export default async function ArticlePage({
     .eq("id", id)
     .single();
 
+  // Also fetch full_content from base table (not in the view)
+  const { data: fullArticle } = await supabase
+    .from("articles")
+    .select("full_content, year")
+    .eq("id", id)
+    .single();
+
+  const fullContent = fullArticle?.full_content || null;
+  const year = fullArticle?.year || 2026;
+
   if (!article) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16 text-center">
@@ -135,7 +145,15 @@ export default async function ArticlePage({
 
       {/* Article content */}
       <div className="prose prose-neutral prose-lg max-w-none">
-        {article.excerpt ? (
+        {fullContent ? (
+          <div className="space-y-4">
+            {fullContent.split(/\n\n+/).map((paragraph: string, i: number) => (
+              <p key={i} className="text-lg leading-relaxed text-foreground/90">
+                {paragraph}
+              </p>
+            ))}
+          </div>
+        ) : article.excerpt ? (
           <p className="text-lg leading-relaxed text-foreground/90">
             {article.excerpt}
           </p>

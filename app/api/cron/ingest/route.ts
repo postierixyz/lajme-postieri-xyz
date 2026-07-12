@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ingestAllFeeds, cleanupOldArticles } from "@/lib/rss-parser";
+import { ingestAllFeeds, enrichArticles } from "@/lib/rss-parser";
 
 export const maxDuration = 300; // 5 minutes
 export const dynamic = "force-dynamic";
@@ -16,14 +16,17 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // Step 1: Fetch RSS feeds and insert new articles
     const result = await ingestAllFeeds();
-    const cleaned = await cleanupOldArticles();
+    
+    // Step 2: Enrich new articles with full content from original sources
+    const enriched = await enrichArticles();
 
     return NextResponse.json({
       ok: true,
       timestamp: new Date().toISOString(),
       ...result,
-      articlesCleanedUp: cleaned,
+      articlesEnriched: enriched,
     });
   } catch (error) {
     return NextResponse.json(

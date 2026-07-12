@@ -18,6 +18,7 @@ const NAV_LINKS = [
   { href: "/kategoria/kulturë", label: "Kulturë" },
   { href: "/kategoria/teknologji", label: "Teknologji" },
   { href: "/kategoria/bota", label: "Bota" },
+  { href: "/arkivi/2026", label: "Arkivi" },
   { href: "/burimet", label: "Burimet" },
 ];
 
