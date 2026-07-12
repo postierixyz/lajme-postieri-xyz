@@ -54,10 +54,7 @@ export function ArticleCard({ article, variant = "default" }: ArticleCardProps) 
               src={article.image_url}
               alt={article.title}
               className="h-full w-full object-cover"
-              loading="lazy"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
+              loading="lazy"}
             />
           </div>
         )}
@@ -90,10 +87,7 @@ export function ArticleCard({ article, variant = "default" }: ArticleCardProps) 
             <img
               src={article.image_url}
               alt={article.title}
-              className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-              onError={(e) => {
-                (e.target as HTMLImageElement).parentElement!.style.display = "none";
-              }}
+              className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"}
             />
           </div>
         )}
@@ -135,10 +129,7 @@ export function ArticleCard({ article, variant = "default" }: ArticleCardProps) 
             src={article.image_url}
             alt={article.title}
             className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-            loading="lazy"
-            onError={(e) => {
-              (e.target as HTMLImageElement).parentElement!.style.display = "none";
-            }}
+            loading="lazy"}
           />
         </div>
       )}
