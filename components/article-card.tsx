@@ -54,7 +54,7 @@ export function ArticleCard({ article, variant = "default" }: ArticleCardProps) 
               src={article.image_url}
               alt={article.title}
               className="h-full w-full object-cover"
-              loading="lazy"}
+              loading="lazy"
             />
           </div>
         )}
@@ -129,7 +129,7 @@ export function ArticleCard({ article, variant = "default" }: ArticleCardProps) 
             src={article.image_url}
             alt={article.title}
             className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-            loading="lazy"}
+            loading="lazy"
           />
         </div>
       )}
