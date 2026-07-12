@@ -195,8 +195,9 @@ async function scrapeFullContent(url: string): Promise<string | null> {
     // STRATEGY 1: Extract article body first (richest content)
     // Albanian news sites use: <article>, <div class="content">, <div class="post-content">,
     // <div class="single-content">, <div class="entry-content">, <div class="article-body">
+    // Telegrafi uses: <div class="all-content-wrapper">
     const articleMatch = html.match(/<article[^>]*>([\s\S]*?)<\/article>/i)
-      || html.match(/<div[^>]+(?:class|id)=["'][^"']*(?:article-content|post-content|content-body|main-content|single-content|entry-content|article-body|artikulli-content|teksti-lajmit)[^"']*["'][^>]*>([\s\S]*?)<\/div>/i)
+      || html.match(/<div[^>]+(?:class|id)=["'][^"']*(?:article-content|post-content|content-body|main-content|single-content|entry-content|article-body|artikulli-content|teksti-lajmit|all-content-wrapper|story-content|news-content)[^"']*["'][^>]*>([\s\S]*?)<\/div>/i)
       || html.match(/<div[^>]+(?:class|id)=["'][^"']*(?:content|entry|single-post|post|article)[^"']*["'][^>]*>([\s\S]*?)<\/div>/i)
       || html.match(/<main[^>]*>([\s\S]*?)<\/main>/i);
     
@@ -214,6 +215,25 @@ async function scrapeFullContent(url: string): Promise<string | null> {
       
       if (content.length > 300) {
         return content.slice(0, 8000);
+      }
+    }
+
+    // STRATEGY 1b: Extract only substantive <p> tags (skip CSS/JS pseudo-p tags)
+    // Remove script and style blocks first, then extract <p> tags with real content
+    const cleanHtml = html
+      .replace(/<script[\s\S]*?<\/script>/gi, "")
+      .replace(/<style[\s\S]*?<\/style>/gi, "")
+      .replace(/<noscript[\s\S]*?<\/noscript>/gi, "");
+    const pMatches = cleanHtml.match(/<p[^>]*>([\s\S]*?)<\/p>/gi);
+    if (pMatches) {
+      const paragraphs = pMatches
+        .map(p => p.replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/g, " ").replace(/\s+/g, " ").trim())
+        .filter(t => t.length > 40 && !t.includes("{")); // filter CSS/JS
+      if (paragraphs.length >= 2) {
+        const combined = paragraphs.join("\n\n");
+        if (combined.length > 300) {
+          return combined.slice(0, 8000);
+        }
       }
     }
 
