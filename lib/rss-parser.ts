@@ -66,7 +66,7 @@ function stripHtml(html: string): string {
     .replace(/&[#a-zA-Z0-9]+;/g, " ")
     .replace(/\s+/g, " ")
     .trim()
-    .slice(0, 1200);
+    .slice(0, 2000);
 }
 
 function extractImage(itemXml: string): string | null {
@@ -192,51 +192,43 @@ async function scrapeFullContent(url: string): Promise<string | null> {
     
     const html = await res.text();
     
-    // Extract og:description (most reliable for Albanian news sites)
-    const ogDesc = html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i)
-      || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:description["']/i);
-    if (ogDesc && ogDesc[1] && ogDesc[1].length > 80) {
-      return ogDesc[1].replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#x27;/g, "'").replace(/&quot;/g, '"');
-    }
-    
-    // Extract article body by looking for common content patterns
-    // Albanian news sites often use: <div class="content">, <article>, <div class="article-content">
+    // STRATEGY 1: Extract article body first (richest content)
+    // Albanian news sites use: <article>, <div class="content">, <div class="post-content">,
+    // <div class="single-content">, <div class="entry-content">, <div class="article-body">
     const articleMatch = html.match(/<article[^>]*>([\s\S]*?)<\/article>/i)
-      || html.match(/<div[^>]+class=["'][^"']*(?:article-content|post-content|content-body|main-content|single-content)[^"']*["'][^>]*>([\s\S]*?)<\/div>/i)
-      || html.match(/<div[^>]+class=["'][^"']*(?:content|entry-content|single-post)[^"']*["'][^>]*>([\s\S]*?)<\/div>/i);
+      || html.match(/<div[^>]+(?:class|id)=["'][^"']*(?:article-content|post-content|content-body|main-content|single-content|entry-content|article-body|artikulli-content|teksti-lajmit)[^"']*["'][^>]*>([\s\S]*?)<\/div>/i)
+      || html.match(/<div[^>]+(?:class|id)=["'][^"']*(?:content|entry|single-post|post|article)[^"']*["'][^>]*>([\s\S]*?)<\/div>/i)
+      || html.match(/<main[^>]*>([\s\S]*?)<\/main>/i);
     
     if (articleMatch) {
       let content = articleMatch[1]
         .replace(/<script[\s\S]*?<\/script>/gi, "")
         .replace(/<style[\s\S]*?<\/style>/gi, "")
         .replace(/<iframe[\s\S]*?<\/iframe>/gi, "")
+        .replace(/<nav[\s\S]*?<\/nav>/gi, "")
+        .replace(/<header[\s\S]*?<\/header>/gi, "")
         .replace(/<[^>]+>/g, " ")
         .replace(/&[a-z]+;/g, " ")
         .replace(/\s+/g, " ")
         .trim();
       
-      if (content.length > 200) {
-        return content.slice(0, 8000); // max 8000 chars
+      if (content.length > 300) {
+        return content.slice(0, 8000);
       }
     }
 
-    // Fallback: extract visible text from the page body
-    const bodyText = html
-      .replace(/<script[\s\S]*?<\/script>/gi, "")
-      .replace(/<style[\s\S]*?<\/style>/gi, "")
-      .replace(/<nav[\s\S]*?<\/nav>/gi, "")
-      .replace(/<footer[\s\S]*?<\/footer>/gi, "")
-      .replace(/<header[\s\S]*?<\/header>/gi, "")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/&[a-z]+;/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-    
-    if (bodyText.length > 500) {
-      // Take middle portion (skip navigation/header junk, get content area)
-      const start = Math.floor(bodyText.length * 0.15); // skip first 15%
-      const chunk = bodyText.slice(start, start + 8000);
-      if (chunk.length > 200) return chunk;
+    // STRATEGY 2: og:description (medium quality, usually 150-350 chars)
+    const ogDesc = html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i)
+      || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:description["']/i);
+    if (ogDesc && ogDesc[1] && ogDesc[1].length > 150) {
+      return ogDesc[1].replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#x27;/g, "'").replace(/&quot;/g, '"');
+    }
+
+    // STRATEGY 3: meta description
+    const metaDesc = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)
+      || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["']/i);
+    if (metaDesc && metaDesc[1] && metaDesc[1].length > 150) {
+      return metaDesc[1].replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#x27;/g, "'").replace(/&quot;/g, '"');
     }
 
     return null;
