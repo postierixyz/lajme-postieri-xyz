@@ -1,11 +1,19 @@
 /**
  * Supabase client — server-side for SSR data fetching
- * Uses @supabase/supabase-js directly (not @supabase/ssr) for server components
+ * Uses process.env directly (NOT NEXT_PUBLIC_) to read at runtime,
+ * because NEXT_PUBLIC_ vars are inlined at build time.
+ * The Dockerfile builds with placeholder values, but the runtime
+ * container has the correct ones via Coolify env vars.
  */
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+function getEnv(key: string, fallback = ""): string {
+  // process.env is evaluated at runtime, not build time
+  return process.env[key] || process.env[`NEXT_PUBLIC_${key}`] || fallback;
+}
+
+const supabaseUrl = getEnv("SUPABASE_URL", getEnv("NEXT_PUBLIC_SUPABASE_URL"));
+const supabaseAnonKey = getEnv("SUPABASE_ANON_KEY", getEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"));
 
 // For server components (SSR) — anon key, respects RLS
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -14,8 +22,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 // For server-side with service role (bypasses RLS — used in API routes/cron)
 export const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL || supabaseUrl,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey,
+  supabaseUrl,
+  getEnv("SUPABASE_SERVICE_ROLE_KEY"),
   {
     auth: { persistSession: false, autoRefreshToken: false },
   }
