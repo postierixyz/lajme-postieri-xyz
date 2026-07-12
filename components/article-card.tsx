@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import type { Article } from "@/lib/supabase";
 import { formatDistanceToNow } from "date-fns";
@@ -16,14 +15,13 @@ export function ArticleCard({ article, variant = "default" }: ArticleCardProps) 
     addSuffix: true,
     locale: sq,
   });
+  const articleUrl = `/artikulli/${article.id}`;
 
   // Compact: small card, no image
   if (variant === "compact") {
     return (
       <Link
-        href={article.url}
-        target="_blank"
-        rel="noopener noreferrer"
+        href={articleUrl}
         className="group flex flex-col gap-1 p-2 rounded-md hover:bg-accent/50 transition-colors"
       >
         <p className="text-sm font-medium leading-snug line-clamp-2 group-hover:text-primary transition-colors">
@@ -42,14 +40,11 @@ export function ArticleCard({ article, variant = "default" }: ArticleCardProps) 
   if (variant === "horizontal") {
     return (
       <Link
-        href={article.url}
-        target="_blank"
-        rel="noopener noreferrer"
+        href={articleUrl}
         className="group flex gap-4 p-2 rounded-md hover:bg-accent/50 transition-colors"
       >
         {article.image_url && (
           <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-md bg-muted">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={article.image_url}
               alt={article.title}
@@ -76,14 +71,11 @@ export function ArticleCard({ article, variant = "default" }: ArticleCardProps) 
   if (variant === "featured") {
     return (
       <Link
-        href={article.url}
-        target="_blank"
-        rel="noopener noreferrer"
+        href={articleUrl}
         className="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-all"
       >
         {article.image_url && (
           <div className="relative aspect-[16/9] overflow-hidden bg-muted">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={article.image_url}
               alt={article.title}
@@ -117,14 +109,11 @@ export function ArticleCard({ article, variant = "default" }: ArticleCardProps) 
   // Default: standard card
   return (
     <Link
-      href={article.url}
-      target="_blank"
-      rel="noopener noreferrer"
+      href={articleUrl}
       className="group flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-sm hover:shadow-md transition-all"
     >
       {article.image_url && (
         <div className="relative aspect-[16/9] overflow-hidden bg-muted">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={article.image_url}
             alt={article.title}

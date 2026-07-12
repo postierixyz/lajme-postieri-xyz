@@ -66,7 +66,7 @@ function stripHtml(html: string): string {
     .replace(/&[#a-zA-Z0-9]+;/g, " ")
     .replace(/\s+/g, " ")
     .trim()
-    .slice(0, 400);
+    .slice(0, 1200);
 }
 
 function extractImage(itemXml: string): string | null {
@@ -247,10 +247,11 @@ export async function ingestAllFeeds(): Promise<{
   };
 }
 
-// Cleanup old articles (keep last 90 days)
+// Cleanup old articles — keep all of 2026, delete older than Jan 1 2026
+// On January 2027, this removes all 2026 articles (fresh start)
 export async function cleanupOldArticles(): Promise<number> {
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - 90);
+  // Keep everything from 2026 onwards (cutoff = Jan 1 2026)
+  const cutoff = new Date("2026-01-01T00:00:00Z");
 
   const { count } = await supabaseAdmin
     .from("articles")
