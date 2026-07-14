@@ -95,6 +95,33 @@ html {
   overflow: hidden;
 }
 
+/* Font size scaling — accessibility widget */
+.font-scale-large {
+  font-size: 112.5%;
+}
+.font-scale-large .prose {
+  font-size: 1.125rem;
+}
+.font-scale-large .text-sm {
+  font-size: 0.95rem;
+}
+.font-scale-large .text-xs {
+  font-size: 0.825rem;
+}
+
+.font-scale-larger {
+  font-size: 125%;
+}
+.font-scale-larger .prose {
+  font-size: 1.25rem;
+}
+.font-scale-larger .text-sm {
+  font-size: 1.05rem;
+}
+.font-scale-larger .text-xs {
+  font-size: 0.9rem;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

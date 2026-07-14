@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { CATEGORIES } from "@/lib/supabase";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
+import { FontSizeToggle } from "@/components/font-size-toggle";
 
 const NAV_LINKS = [
   { href: "/", label: "Ballina" },
@@ -37,10 +38,14 @@ export function Header() {
       {/* Top bar */}
       <div className="border-b border-border bg-primary text-primary-foreground">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-1.5 text-xs">
-          <span className="hidden sm:block font-medium tracking-wide">
+          <span className="hidden sm:flex items-center gap-3 font-medium tracking-wide">
+            <FontSizeToggle />
             {new Date().toLocaleDateString("sq-AL", {
               weekday: "long", year: "numeric", month: "long", day: "numeric",
             })}
+          </span>
+          <span className="sm:hidden font-medium tracking-wide">
+            <FontSizeToggle />
           </span>
           <span className="font-semibold uppercase tracking-widest">
             Agregatori i Lajmeve Shqipe
