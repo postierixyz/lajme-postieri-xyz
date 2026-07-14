@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { Type } from "lucide-react";
 
 type FontScale = "normal" | "large" | "larger";
 
 export function FontSizeToggle() {
   const [scale, setScale] = useState<FontScale>("normal");
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("lajme-font-scale") as FontScale;
@@ -17,9 +19,7 @@ export function FontSizeToggle() {
   }, []);
 
   function applyScale(newScale: FontScale) {
-    // Remove all scale classes first
     document.documentElement.classList.remove("font-scale-large", "font-scale-larger");
-    
     if (newScale === "large") {
       document.documentElement.classList.add("font-scale-large");
     } else if (newScale === "larger") {
@@ -27,42 +27,69 @@ export function FontSizeToggle() {
     }
   }
 
-  function cycleScale() {
-    const next: Record<FontScale, FontScale> = {
-      normal: "large",
-      large: "larger",
-      larger: "normal",
-    };
-    const newScale = next[scale];
+  function setAndApply(newScale: FontScale) {
     setScale(newScale);
     applyScale(newScale);
     localStorage.setItem("lajme-font-scale", newScale);
   }
 
   return (
-    <button
-      onClick={cycleScale}
-      className="flex items-center gap-0.5 rounded-md border border-border px-2 py-1 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
-      title={`Madhësia e shkronjave: ${scale === "normal" ? "Normale" : scale === "large" ? "E madhe" : "Shumë e madhe"}`}
-    >
-      <span className={cn(
-        "leading-none",
-        scale === "normal" && "text-[10px]",
-        scale === "large" && "text-[10px]",
-        scale === "larger" && "text-[10px]"
-      )}>A</span>
-      <span className={cn(
-        "leading-none",
-        scale === "normal" && "text-xs",
-        scale === "large" && "text-sm font-semibold text-primary",
-        scale === "larger" && "text-sm"
-      )}>A</span>
-      <span className={cn(
-        "leading-none",
-        scale === "normal" && "text-sm",
-        scale === "large" && "text-sm",
-        scale === "larger" && "text-lg font-semibold text-primary"
-      )}>A</span>
-    </button>
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
+      {/* Popover menu */}
+      {open && (
+        <div className="flex flex-col gap-0.5 rounded-xl border border-border bg-popover p-1.5 shadow-lg animate-in fade-in slide-in-from-bottom-2">
+          <button
+            onClick={() => { setAndApply("normal"); setOpen(false); }}
+            className={cn(
+              "flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              scale === "normal"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground"
+            )}
+          >
+            <span className="text-[13px] font-bold leading-none">A</span>
+            <span className="text-xs">Normal</span>
+          </button>
+          <button
+            onClick={() => { setAndApply("large"); setOpen(false); }}
+            className={cn(
+              "flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              scale === "large"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground"
+            )}
+          >
+            <span className="text-[17px] font-bold leading-none">A</span>
+            <span className="text-xs">E madhe</span>
+          </button>
+          <button
+            onClick={() => { setAndApply("larger"); setOpen(false); }}
+            className={cn(
+              "flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              scale === "larger"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground"
+            )}
+          >
+            <span className="text-[22px] font-bold leading-none">A</span>
+            <span className="text-xs">Shumë e madhe</span>
+          </button>
+        </div>
+      )}
+
+      {/* Floating button */}
+      <button
+        onClick={() => setOpen(!open)}
+        className={cn(
+          "flex h-11 w-11 items-center justify-center rounded-full shadow-lg transition-all duration-200 hover:scale-110",
+          scale !== "normal"
+            ? "bg-primary text-primary-foreground ring-2 ring-primary/30"
+            : "bg-popover text-foreground border border-border"
+        )}
+        title="Ndrysho madhësinë e shkronjave"
+      >
+        <Type className="h-5 w-5" />
+      </button>
+    </div>
   );
 }

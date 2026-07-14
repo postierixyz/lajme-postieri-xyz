@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { FontSizeToggle } from "@/components/font-size-toggle";
 
 export const metadata: Metadata = {
   title: {
@@ -37,6 +38,7 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <Footer />
         </div>
+        <FontSizeToggle />
       </body>
     </html>
   );
